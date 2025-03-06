@@ -10,8 +10,6 @@ import (
 	_ "github.com/lib/pq"
 )
 
-const XmlUrl = "https://www.wagslane.dev/index.xml"
-
 type RSSFeed struct {
 	Channel struct {
 		Title       string    `xml:"title"`

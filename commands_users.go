@@ -117,7 +117,7 @@ func handlerGetUsers(s *state, cmd command) error {
 	if len(users) == 0 {
 		return fmt.Errorf("no users currently registered")
 	}
-
+	fmt.Println("Users:")
 	for _, user := range users {
 
 		if user == s.cfg.CurrentUsername {

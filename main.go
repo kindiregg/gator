@@ -24,8 +24,8 @@ func main() {
 
 	st := &state{cfg: &cfg}
 
-	fmt.Printf("DB URL: %s\n", st.cfg.DBUrl)
-	fmt.Printf("Current User: %s\n", st.cfg.CurrentUsername)
+	// fmt.Printf("DB URL: %s\n", st.cfg.DBUrl)
+	// fmt.Printf("Current User: %s\n", st.cfg.CurrentUsername)
 
 	db, err := sql.Open("postgres", st.cfg.DBUrl)
 	if err != nil {
@@ -45,6 +45,7 @@ func main() {
 	cmds.register("users", handlerGetUsers)
 	cmds.register("agg", handlerAgg)
 	cmds.register("addfeed", handlerAddFeed)
+	cmds.register("feeds", handlerFeeds)
 
 	if len(os.Args) < 2 {
 		fmt.Println("Error: not enough arguments provided")
