@@ -42,14 +42,16 @@ func Write(cfg Config) error {
 		return err
 	}
 
-	data, err := json.Marshal(cfg)
+	file, err := os.Create(path)
 	if err != nil {
-		return fmt.Errorf("could not marshal config")
+		return fmt.Errorf("could not create file at %s: %w", path, err)
 	}
+	defer file.Close()
 
-	err = os.WriteFile(path, data, 0644)
+	encoder := json.NewEncoder(file)
+	err = encoder.Encode(cfg)
 	if err != nil {
-		return fmt.Errorf("could not write file")
+		return fmt.Errorf("could not encode JSON for config: %w", err)
 	}
 
 	return nil

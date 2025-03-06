@@ -1,12 +1,20 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"os"
 
 	"github.com/kindiregg/gator/internal/config"
+	"github.com/kindiregg/gator/internal/database"
+	_ "github.com/lib/pq"
 )
+
+type state struct {
+	cfg *config.Config
+	db  *database.Queries
+}
 
 func main() {
 	cfg, err := config.Read()
@@ -14,16 +22,27 @@ func main() {
 		log.Fatalf("failed to read config")
 	}
 
-	st := &state{Config: &cfg}
+	st := &state{cfg: &cfg}
 
-	fmt.Printf("DB URL: %s\n", st.DBUrl)
-	fmt.Printf("Current User: %s\n", st.CurrentUsername)
+	fmt.Printf("DB URL: %s\n", st.cfg.DBUrl)
+	fmt.Printf("Current User: %s\n", st.cfg.CurrentUsername)
 
+	db, err := sql.Open("postgres", st.cfg.DBUrl)
+	if err != nil {
+		log.Fatalf("failed to connect to database at: %s", st.cfg.DBUrl)
+	}
+
+	dbQueries := database.New(db)
+
+	st.db = dbQueries
 	cmds := &commands{
 		handlers: make(map[string]func(*state, command) error),
 	}
 
 	cmds.register("login", handlerLogin)
+	cmds.register("register", handlerRegister)
+	cmds.register("reset", handlerReset)
+	cmds.register("users", handlerGetUsers)
 
 	if len(os.Args) < 2 {
 		fmt.Println("Error: not enough arguments provided")
