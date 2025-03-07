@@ -10,17 +10,6 @@ import (
 	"github.com/kindiregg/gator/internal/database"
 )
 
-func handlerAgg(s *state, cmd command) error {
-	url := cmd.args[0]
-	rFeed, err := fetchFeed(context.Background(), url)
-	if err != nil {
-		return err
-	}
-
-	fmt.Println(*rFeed)
-	return nil
-}
-
 func handlerAddFeed(s *state, cmd command, user database.User) error {
 	if len(cmd.args) < 2 {
 		return fmt.Errorf("incorrect format, use <name> <url>")
@@ -101,11 +90,34 @@ func handlerFollow(s *state, cmd command, user database.User) error {
 	}
 
 	fmt.Println("Feed follow created:")
-	printFeedFollow(user.Name, feed.Name)
+	fmt.Printf("* User:          %s\n", user.Name)
+	fmt.Printf("* Feed:          %s\n", feed.Name)
 	return nil
 }
 
-func printFeedFollow(username, feedname string) {
-	fmt.Printf("* User:          %s\n", username)
-	fmt.Printf("* Feed:          %s\n", feedname)
+func handlerUnfollow(s *state, cmd command, user database.User) error {
+	if len(cmd.args) < 1 {
+		return fmt.Errorf("please include a url argument")
+	}
+
+	url := cmd.args[0]
+	feed, err := s.db.GetFeedByURL(context.Background(), url)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return fmt.Errorf("no feed found with the provided URL")
+		}
+		return fmt.Errorf("error querying feed: %v", err)
+	}
+
+	err = s.db.DeleteFeedFollow(context.Background(), database.DeleteFeedFollowParams{
+		UserID: user.ID,
+		FeedID: feed.ID,
+	})
+	if err != nil {
+		return fmt.Errorf("could not delete feed follow: %w", err)
+	}
+
+	fmt.Printf("%s successfully unfollowed %s", user.Name, feed.Name)
+
+	return nil
 }
