@@ -116,24 +116,6 @@ func (q *Queries) GetUser(ctx context.Context, name string) (User, error) {
 	return i, err
 }
 
-const getUserByUsername = `-- name: GetUserByUsername :one
-SELECT id, name
-FROM users
-WHERE name = $1
-`
-
-type GetUserByUsernameRow struct {
-	ID   uuid.UUID
-	Name string
-}
-
-func (q *Queries) GetUserByUsername(ctx context.Context, name string) (GetUserByUsernameRow, error) {
-	row := q.db.QueryRowContext(ctx, getUserByUsername, name)
-	var i GetUserByUsernameRow
-	err := row.Scan(&i.ID, &i.Name)
-	return i, err
-}
-
 const getUsers = `-- name: GetUsers :many
 SELECT Name FROM users
 `

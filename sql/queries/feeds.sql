@@ -13,7 +13,7 @@ SELECT f.id, f.created_at, f.updated_at, f.name, f.url, f.user_id, u.name as use
 FROM feeds f
 JOIN users u ON f.user_id = u.id;
 
--- name: CreateFollowFeed :many
+-- name: CreateFeedFollow :many
 WITH inserted_feed_follow AS (
     INSERT INTO feed_follows (id, created_at, updated_at, user_id, feed_id)
     VALUES ($1, $2, $3, $4, $5)

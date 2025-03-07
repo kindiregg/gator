@@ -132,7 +132,7 @@ func handlerGetUsers(s *state, cmd command) error {
 }
 
 func handlerFollowing(s *state, cmd command) error {
-	currentUser, err := s.db.GetUserByUsername(context.Background(), s.cfg.CurrentUsername)
+	currentUser, err := s.db.GetUser(context.Background(), s.cfg.CurrentUsername)
 	if err != nil {
 		return fmt.Errorf("could not get user ID: %w", err)
 	}

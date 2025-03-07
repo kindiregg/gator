@@ -18,11 +18,6 @@ DELETE FROM users;
 -- name: GetUsers :many
 SELECT Name FROM users;
 
--- name: GetUserByUsername :one
-SELECT id, name
-FROM users
-WHERE name = $1;
-
 -- name: GetFollowsForUser :many
 SELECT
     feed_follows.*,

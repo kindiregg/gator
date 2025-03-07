@@ -50,7 +50,7 @@ func handlerAddFeed(s *state, cmd command) error {
 	}
 
 	followID := uuid.New()
-	_, err = s.db.CreateFollowFeed(context.Background(), database.CreateFollowFeedParams{
+	_, err = s.db.CreateFeedFollow(context.Background(), database.CreateFeedFollowParams{
 		ID:        followID,
 		CreatedAt: now,
 		UpdatedAt: now,
@@ -97,9 +97,7 @@ func handlerFollow(s *state, cmd command) error {
 		return fmt.Errorf("error querying feed: %v", err)
 	}
 
-	followFeedID := uuid.New()
-	now := time.Now().UTC()
-	user, err := s.db.GetUserByUsername(context.Background(), s.cfg.CurrentUsername)
+	user, err := s.db.GetUser(context.Background(), s.cfg.CurrentUsername)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return fmt.Errorf("user not found")
@@ -107,10 +105,10 @@ func handlerFollow(s *state, cmd command) error {
 		return fmt.Errorf("error querying user: %v", err)
 	}
 
-	_, err = s.db.CreateFollowFeed(context.Background(), database.CreateFollowFeedParams{
-		ID:        followFeedID,
-		CreatedAt: now,
-		UpdatedAt: now,
+	_, err = s.db.CreateFeedFollow(context.Background(), database.CreateFeedFollowParams{
+		ID:        uuid.New(),
+		CreatedAt: time.Now().UTC(),
+		UpdatedAt: time.Now().UTC(),
 		UserID:    user.ID,
 		FeedID:    feed.ID,
 	})
@@ -119,7 +117,12 @@ func handlerFollow(s *state, cmd command) error {
 		return fmt.Errorf("failed to create follow record: %w", err)
 	}
 
-	fmt.Printf("You are now following the feed: %s\n", feed.Name)
-
+	fmt.Println("Feed follow created:")
+	printFeedFollow(user.Name, feed.Name)
 	return nil
+}
+
+func printFeedFollow(username, feedname string) {
+	fmt.Printf("* User:          %s\n", username)
+	fmt.Printf("* Feed:          %s\n", feedname)
 }
