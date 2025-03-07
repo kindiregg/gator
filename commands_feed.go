@@ -21,27 +21,19 @@ func handlerAgg(s *state, cmd command) error {
 	return nil
 }
 
-func handlerAddFeed(s *state, cmd command) error {
+func handlerAddFeed(s *state, cmd command, user database.User) error {
 	if len(cmd.args) < 2 {
 		return fmt.Errorf("incorrect format, use <name> <url>")
 	}
 
-	name := cmd.args[0]
+	inputFeedName := cmd.args[0]
 	url := cmd.args[1]
 
-	user, err := s.db.GetUser(context.Background(), s.cfg.CurrentUsername)
-	if err != nil {
-		return fmt.Errorf("could not get feed user '%s': %w", name, err)
-	}
-
-	id := uuid.New()
-	now := time.Now().UTC()
-
 	feed, err := s.db.CreateFeed(context.Background(), database.CreateFeedParams{
-		ID:        id,
-		CreatedAt: now,
-		UpdatedAt: now,
-		Name:      name,
+		ID:        uuid.New(),
+		CreatedAt: time.Now().UTC(),
+		UpdatedAt: time.Now().UTC(),
+		Name:      inputFeedName,
 		Url:       url,
 		UserID:    user.ID,
 	})
@@ -49,11 +41,10 @@ func handlerAddFeed(s *state, cmd command) error {
 		return err
 	}
 
-	followID := uuid.New()
 	_, err = s.db.CreateFeedFollow(context.Background(), database.CreateFeedFollowParams{
-		ID:        followID,
-		CreatedAt: now,
-		UpdatedAt: now,
+		ID:        uuid.New(),
+		CreatedAt: time.Now().UTC(),
+		UpdatedAt: time.Now().UTC(),
 		UserID:    user.ID,
 		FeedID:    feed.ID,
 	})
@@ -83,7 +74,7 @@ func handlerFeeds(s *state, cmd command) error {
 	return nil
 }
 
-func handlerFollow(s *state, cmd command) error {
+func handlerFollow(s *state, cmd command, user database.User) error {
 	if len(cmd.args) < 1 {
 		return fmt.Errorf("please include a url argument")
 	}
@@ -95,14 +86,6 @@ func handlerFollow(s *state, cmd command) error {
 			return fmt.Errorf("no feed found with the provided URL")
 		}
 		return fmt.Errorf("error querying feed: %v", err)
-	}
-
-	user, err := s.db.GetUser(context.Background(), s.cfg.CurrentUsername)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return fmt.Errorf("user not found")
-		}
-		return fmt.Errorf("error querying user: %v", err)
 	}
 
 	_, err = s.db.CreateFeedFollow(context.Background(), database.CreateFeedFollowParams{

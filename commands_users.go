@@ -61,7 +61,7 @@ func handlerRegister(s *state, cmd command) error {
 		return fmt.Errorf("failed to create user %s: %w", name, err)
 	}
 
-	s.cfg.CurrentUsername = user.Name
+	s.cfg.CurrentUserName = user.Name
 
 	err = config.Write(*s.cfg)
 	if err != nil {
@@ -85,7 +85,7 @@ func handlerLogin(s *state, cmd command) error {
 		os.Exit(1)
 	}
 
-	s.cfg.CurrentUsername = cmd.args[0]
+	s.cfg.CurrentUserName = cmd.args[0]
 
 	err = config.Write(*s.cfg)
 	if err != nil {
@@ -120,7 +120,7 @@ func handlerGetUsers(s *state, cmd command) error {
 	fmt.Println("Users:")
 	for _, user := range users {
 
-		if user == s.cfg.CurrentUsername {
+		if user == s.cfg.CurrentUserName {
 			fmt.Printf("* %s (current)\n", user)
 		} else {
 			fmt.Printf("* %s\n", user)
@@ -131,21 +131,15 @@ func handlerGetUsers(s *state, cmd command) error {
 	return nil
 }
 
-func handlerFollowing(s *state, cmd command) error {
-	currentUser, err := s.db.GetUser(context.Background(), s.cfg.CurrentUsername)
-	if err != nil {
-		return fmt.Errorf("could not get user ID: %w", err)
-	}
+func handlerFollowing(s *state, cmd command, user database.User) error {
 
-	following, err := s.db.GetFollowsForUser(context.Background(), currentUser.ID)
+	following, err := s.db.GetFollowsForUser(context.Background(), user.ID)
 	if err != nil {
-		return fmt.Errorf("could not get following list of user %s: %w", currentUser.Name, err)
+		return fmt.Errorf("could not get following list of user %s: %w", user.Name, err)
 	}
-	// fmt.Println()
-	// fmt.Printf("%s is following", currentUser.Name)
 	for _, follow := range following {
 		fmt.Println(follow.FeedName)
 	}
-	// fmt.Println()
+
 	return nil
 }
