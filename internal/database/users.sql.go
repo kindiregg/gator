@@ -47,6 +47,58 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 	return i, err
 }
 
+const getFollowsForUser = `-- name: GetFollowsForUser :many
+SELECT
+    feed_follows.id, feed_follows.created_at, feed_follows.updated_at, feed_follows.user_id, feed_follows.feed_id,
+    feeds.name AS feed_name,
+    users.name AS user_name
+FROM feed_follows
+INNER JOIN feeds ON feed_follows.feed_id = feeds.id
+INNER JOIN users ON feed_follows.user_id = users.id
+WHERE feed_follows.user_id = $1
+`
+
+type GetFollowsForUserRow struct {
+	ID        uuid.UUID
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	UserID    uuid.UUID
+	FeedID    uuid.UUID
+	FeedName  string
+	UserName  string
+}
+
+func (q *Queries) GetFollowsForUser(ctx context.Context, userID uuid.UUID) ([]GetFollowsForUserRow, error) {
+	rows, err := q.db.QueryContext(ctx, getFollowsForUser, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetFollowsForUserRow
+	for rows.Next() {
+		var i GetFollowsForUserRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.UserID,
+			&i.FeedID,
+			&i.FeedName,
+			&i.UserName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getUser = `-- name: GetUser :one
 SELECT id, created_at, updated_at, name FROM users
 WHERE Name = $1
@@ -61,6 +113,24 @@ func (q *Queries) GetUser(ctx context.Context, name string) (User, error) {
 		&i.UpdatedAt,
 		&i.Name,
 	)
+	return i, err
+}
+
+const getUserByUsername = `-- name: GetUserByUsername :one
+SELECT id, name
+FROM users
+WHERE name = $1
+`
+
+type GetUserByUsernameRow struct {
+	ID   uuid.UUID
+	Name string
+}
+
+func (q *Queries) GetUserByUsername(ctx context.Context, name string) (GetUserByUsernameRow, error) {
+	row := q.db.QueryRowContext(ctx, getUserByUsername, name)
+	var i GetUserByUsernameRow
+	err := row.Scan(&i.ID, &i.Name)
 	return i, err
 }
 

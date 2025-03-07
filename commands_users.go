@@ -130,3 +130,22 @@ func handlerGetUsers(s *state, cmd command) error {
 
 	return nil
 }
+
+func handlerFollowing(s *state, cmd command) error {
+	currentUser, err := s.db.GetUserByUsername(context.Background(), s.cfg.CurrentUsername)
+	if err != nil {
+		return fmt.Errorf("could not get user ID: %w", err)
+	}
+
+	following, err := s.db.GetFollowsForUser(context.Background(), currentUser.ID)
+	if err != nil {
+		return fmt.Errorf("could not get following list of user %s: %w", currentUser.Name, err)
+	}
+	// fmt.Println()
+	// fmt.Printf("%s is following", currentUser.Name)
+	for _, follow := range following {
+		fmt.Println(follow.FeedName)
+	}
+	// fmt.Println()
+	return nil
+}
